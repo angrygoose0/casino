@@ -17,13 +17,7 @@ export function getRandomProgram(provider: AnchorProvider, address?: PublicKey) 
 
 // This is a helper function to get the program ID for the Random program depending on the cluster.
 export function getRandomProgramId(cluster: Cluster) {
-  switch (cluster) {
-    case 'devnet':
-    case 'testnet':
-      // This is the program ID for the Random program on devnet and testnet.
-      return new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF')
-    case 'mainnet-beta':
-    default:
-      return RANDOM_PROGRAM_ID
-  }
+  
+  return RANDOM_PROGRAM_ID;
+  
 }

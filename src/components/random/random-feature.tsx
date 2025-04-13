@@ -5,7 +5,7 @@ import { WalletButton } from '../solana/solana-provider'
 import { AppHero, ellipsify } from '../ui/ui-layout'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { useRandomProgram } from './random-data-access'
-import { RandomCreate, RandomList } from './random-ui'
+import { RollDice, CreateDice, ShowDice } from './random-ui'
 
 export default function RandomFeature() {
   const { publicKey } = useWallet()
@@ -22,9 +22,10 @@ export default function RandomFeature() {
         <p className="mb-6">
           <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
         </p>
-        <RandomCreate />
+        <CreateDice/>
+        <RollDice/>
+        <ShowDice/>
       </AppHero>
-      <RandomList />
     </div>
   ) : (
     <div className="max-w-4xl mx-auto">

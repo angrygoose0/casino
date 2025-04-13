@@ -1,8 +1,8 @@
 'use client'
 
 import { getRandomProgram, getRandomProgramId } from '@project/anchor'
-import { useConnection } from '@solana/wallet-adapter-react'
-import { Cluster, Keypair, PublicKey } from '@solana/web3.js'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { Cluster, Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import toast from 'react-hot-toast'
@@ -18,87 +18,137 @@ export function useRandomProgram() {
   const programId = useMemo(() => getRandomProgramId(cluster.network as Cluster), [cluster])
   const program = useMemo(() => getRandomProgram(provider, programId), [provider, programId])
 
-  const accounts = useQuery({
-    queryKey: ['random', 'all', { cluster }],
-    queryFn: () => program.account.random.all(),
-  })
-
   const getProgramAccount = useQuery({
     queryKey: ['get-program-account', { cluster }],
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
-  const initialize = useMutation({
-    mutationKey: ['random', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ random: keypair.publicKey }).signers([keypair]).rpc(),
-    onSuccess: (signature) => {
-      transactionToast(signature)
-      return accounts.refetch()
-    },
-    onError: () => toast.error('Failed to initialize account'),
-  })
+
 
   return {
     program,
     programId,
-    accounts,
     getProgramAccount,
-    initialize,
   }
 }
 
-export function useRandomProgramAccount({ account }: { account: PublicKey }) {
-  const { cluster } = useCluster()
-  const transactionToast = useTransactionToast()
-  const { program, accounts } = useRandomProgram()
+export function useInitDice() {
+  const { program, programId } = useRandomProgram();
+  const transactionToast = useTransactionToast();
+  const { connection } = useConnection();
+  const { sendTransaction, publicKey } = useWallet();
+  const initDice = useMutation<
+    string,
+    Error
+  >({
+    mutationKey: ['initDice'],
+    mutationFn: async ( ) => {
+      try {
+        if (publicKey === null) {
+          throw new Error('Wallet not connected');
+        }
 
-  const accountQuery = useQuery({
-    queryKey: ['random', 'fetch', { cluster, account }],
-    queryFn: () => program.account.random.fetch(account),
-  })
+        const diceSeeds = [Buffer.from("DICE")];
+        const [diceKey] = PublicKey.findProgramAddressSync(diceSeeds, programId);
+        
+        const init = await program.methods
+          .initializeDice()
+          .accounts({
+            payer: publicKey,
+          })
+          .rpc();
 
-  const closeMutation = useMutation({
-    mutationKey: ['random', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ random: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accounts.refetch()
+        return init;
+        
+
+      } catch (error) {
+        console.error("Error during transaction processing:", error);
+        throw error;
+      }
     },
-  })
 
-  const decrementMutation = useMutation({
-    mutationKey: ['random', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ random: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
+    onSuccess: (signature) => {
+      transactionToast(signature);
     },
-  })
-
-  const incrementMutation = useMutation({
-    mutationKey: ['random', 'increment', { cluster, account }],
-    mutationFn: () => program.methods.increment().accounts({ random: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
+    onError: (error) => {
+      toast.error(`Error initializing game ${error.message}`);
+      console.error('Toast error:', error);
     },
-  })
-
-  const setMutation = useMutation({
-    mutationKey: ['random', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ random: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
+  });
 
   return {
-    accountQuery,
-    closeMutation,
-    decrementMutation,
-    incrementMutation,
-    setMutation,
-  }
+    initDice,
+  };
 }
+
+export function useRollDice() {
+  const { program } = useRandomProgram();
+  const transactionToast = useTransactionToast();
+  const { connection } = useConnection();
+  const { sendTransaction, publicKey } = useWallet();
+  const rollDice = useMutation<
+    string,
+    Error
+  >({
+    mutationKey: ['rollDice'],
+    mutationFn: async ( ) => {
+      try {
+        if (publicKey === null) {
+          throw new Error('Wallet not connected');
+        }
+
+
+        
+        const roll = await program.methods
+          .rollDice(0)
+          .accounts({
+            payer: publicKey,
+          })
+          .rpc();
+
+        
+        return roll;
+
+
+      } catch (error) {
+        console.error("Error during transaction processing:", error);
+        throw error;
+      }
+    },
+
+    onSuccess: (signature) => {
+      transactionToast(signature);
+    },
+    onError: (error) => {
+      toast.error(`Error initializing game ${error.message}`);
+      console.error('Toast error:', error);
+    },
+  });
+
+  return {
+    rollDice,
+  };
+}
+
+export function useDiceQuery() {
+  const { program, programId } = useRandomProgram();
+  const { connection } = useConnection();
+  
+
+  const diceSeeds = [Buffer.from("DICE")];
+  const gameAccountKey = PublicKey.findProgramAddressSync(diceSeeds, programId)[0];
+
+  const diceQuery = useQuery({
+    queryKey: ['diceQuery'],
+    queryFn: async () => {
+      return program.account.dice.fetch(gameAccountKey);
+    },
+  });
+
+  return {
+    diceQuery
+  }
+};
+  
+
+
