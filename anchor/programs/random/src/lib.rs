@@ -5,7 +5,12 @@ use ephemeral_vrf_sdk::anchor::vrf;
 use ephemeral_vrf_sdk::instructions::{create_request_randomness_ix, RequestRandomnessParams};
 use ephemeral_vrf_sdk::types::SerializableAccountMeta;
 
-declare_id!("HDxTSvJJ8MABXXo93usZeTxXG2URBPUovNuivjHmuNfq");
+use anchor_spl::{
+    associated_token::{AssociatedToken},
+    token_interface::{Mint, TokenAccount, TokenInterface, transfer_checked, TransferChecked, SyncNative, sync_native},
+};
+
+declare_id!("EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa");
 
 
 #[program]
@@ -17,7 +22,7 @@ pub mod random {
 
     //mainnet: pub const TOKEN_MINT: Pubkey = pubkey!("5gVSqhk41VA8U6U4Pvux6MSxFWqgptm3w58X9UTGpump");
     pub const TOKEN_MINT: Pubkey = pubkey!("D2BYx2UoshNpAfgBEXEEyfUKxLSxkLMAb6zeZhZYgoos");
-    pub const TOKEN_DECIMALS: u64 = 9;
+    pub const TOKEN_DECIMALS: u8 = 9;
 
     pub const FEE_PERCENTAGE: u8 = 100; // divide by 100 so 1%
 
@@ -32,12 +37,12 @@ pub mod random {
 
         require!(
             ctx.accounts.solana_mint.key() == SOLANA_MINT,
-            CustomError::InvalidMint,
+            CustomError::Unauthorized,
         );
 
         require!(
             ctx.accounts.token_mint.key() == TOKEN_MINT,
-            CustomError::InvalidMint,
+            CustomError::Unauthorized,
         );
 
 
@@ -88,18 +93,18 @@ pub mod random {
 
     // POKER
 
-    pub fn initialize_poker(ctx: Context<InitializePoker) -> Result<()> {
+    pub fn initialize_poker(ctx: Context<InitializePoker>) -> Result<()> {
         let poker = &mut ctx.accounts.poker;
 
-        poker.min_buy_in = 1000000
-        poker.max_buy_in = 10000000
+        poker.min_buy_in = 1000000;
+        poker.max_buy_in = 10000000;
         
 
         poker.min_player_count = 4;
         poker.max_player_count = 8;
 
-        poker.big_blind = 10000
-        poker.small_blind = 5000
+        poker.big_blind = 10000;
+        poker.small_blind = 5000;
 
         poker.pot_amount = 0;
         poker.next_skip_time = -1;
@@ -124,55 +129,49 @@ pub mod random {
 
         poker.round = 0;
 
+        poker.showdown = false;
+
 
 
         Ok(())
     }
 
-    pub fn join_poker(ctx: Context<JoinPoker, username:String, buy_in_amount: u64,) -> Result<()> {
+    pub fn join_poker(ctx: Context<JoinPoker>, username:String, buy_in_amount: u64) -> Result<()> {
         let poker = &mut ctx.accounts.poker;
         let new_id: u64 = poker.player_no + 1;
 
-
-        require!(
-            poker.pot_amount == 0,
-            Error,
-        )
-
         require!(
             poker.currently_playing < poker.max_player_count,
-            Error
+            PokerError::FullTable
         );
 
         require!(
             buy_in_amount >= poker.min_buy_in,
-            Error
+            CustomError::TooSmall
         );
 
         require!(
             buy_in_amount <= poker.max_buy_in,
-            Error
+            CustomError::TooBig
         );
 
         require!(
             ctx.accounts.token_mint.key() == TOKEN_MINT,
-            Error
+            CustomError::Unauthorized
         );
 
         poker.currently_playing += 1;
         poker.player_no = new_id;
 
-        let fees = buy_in_amount * FEE_PERCENTAGE as u64 / 10000;
-        let amount_after_fees = lottery_account.price - fees;
 
         let poker_player = &mut ctx.accounts.poker_player;
 
         poker_player.user = ctx.accounts.signer.key();
         poker_player.poker = poker.key();
         poker_player.id = new_id;
-        poker_player.chip_amount = amount_after_fees;
+        poker_player.chip_amount = buy_in_amount;
         poker_player.username = username;
-        poker_player.round = poker.round + 1
+        poker_player.round = poker.round + 1;
 
 
         transfer_checked(
@@ -182,69 +181,90 @@ pub mod random {
                     from: ctx.accounts.user_token_account.to_account_info(),
                     to: ctx.accounts.token_treasury.to_account_info(),
                     authority: ctx.accounts.signer.to_account_info(),
-                    mint: ctx.accounts.mint.to_account_info(),
-                },
-                buy_in_amount,
-                TOKEN_DECIMALS,
-            )
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                },   
+            ),
+            buy_in_amount,
+            TOKEN_DECIMALS,
         );
+
+        Ok(())
     }
 
-    pub fn poker_start(ctx: Context<InitializePoker) -> Result<()> {
+    pub fn poker_start(ctx: Context<StartPoker>) -> Result<()> {
         let poker = &mut ctx.accounts.poker;
+
+        let dealer_id = get_next_player_id(
+            poker.dealer_id,
+            1,
+            poker.key(), 
+            poker.round,
+            &ctx.remaining_accounts
+        )?; 
+        poker.dealer_id = dealer_id;
+
 
         let small_blind_player = &mut ctx.accounts.small_blind_poker_player;
         let big_blind_player = &mut ctx.accounts.big_blind_poker_player;
-        let utg_player = &mut ctx.accounts.utg_poker_player;
+
+        poker.round += 1;
 
         require!(
             poker.currently_playing >= poker.min_player_count,
-            Error
+            CustomError::Unauthorized
         );
 
         require!(
             poker.pot_amount == 0,
-            Error
-        )
+            CustomError::Unauthorized
+        );
 
-        poker.dealer_id = 1;
-        //pick who is the dealer randomly then, sb and bb, and we know whos turn it is now. the person to the left of bb
+        require!(
+            ctx.remaining_accounts.len() == poker.currently_playing as usize,
+            CustomError::Unauthorized
+        );
 
         let small_blind_id = get_next_player_id(
-            poker.dealer_id
+            poker.dealer_id,
             1,
             poker.key(), 
+            poker.round,
             &ctx.remaining_accounts
         )?; 
 
         require!(
             small_blind_id == small_blind_player.id,
-            Error
+            CustomError::Unauthorized
+        );
+        require!(
+            small_blind_player.poker == poker.key(),
+            CustomError::Unauthorized
         );
 
         let big_blind_id = get_next_player_id(
-            poker.dealer_id
+            poker.dealer_id,
             2,
             poker.key(), 
+            poker.round,
             &ctx.remaining_accounts
         )?; 
 
         require!(
             big_blind_id == big_blind_player.id,
-            Error
+            CustomError::Unauthorized
+        );
+        require!(
+            big_blind_player.poker == poker.key(),
+            CustomError::Unauthorized
         );
 
         let utg_id = get_next_player_id(
-            poker.dealer_id
+            poker.dealer_id,
             3,
             poker.key(), 
+            poker.round,
             &ctx.remaining_accounts
         )?; 
-
-        require!(
-            utg_id == utg_player.id,
-            Error
-        );
 
         poker.current_player_id = utg_id;
 
@@ -253,20 +273,19 @@ pub mod random {
         small_blind_player.chip_amount -= poker.small_blind;
         big_blind_player.chip_amount -= poker.big_blind;
 
-        let blinds = poker.small_blind + poker.big_blind
+        let blinds = poker.small_blind + poker.big_blind;
         poker.pot_amount = blinds;
         poker.current_raise = poker.big_blind;
         poker.last_raise = poker.big_blind;
 
-        
-          
+    
         Ok(())
 
     
     }
 
 
-    pub fn poker_call(ctx: Context<PokerCall, amount: i64) -> Result<()> { // 0 call/check | 0< raise |  fold
+    pub fn poker_call(ctx: Context<PokerCall>, amount: i64) -> Result<()> { // 0 call/check | 0< raise |  fold
         let poker = &mut ctx.accounts.poker;
         let poker_player = &mut ctx.accounts.poker_player;
 
@@ -274,6 +293,23 @@ pub mod random {
             poker.current_player_id, 
             1,
             poker.key(), 
+            poker.round,
+            &ctx.remaining_accounts
+        )?; 
+
+        let small_blind_id = get_next_player_id(
+            poker.dealer_id,
+            1,
+            poker.key(), 
+            poker.round,
+            &ctx.remaining_accounts
+        )?; 
+
+        let big_blind_id = get_next_player_id(
+            poker.dealer_id,
+            2,
+            poker.key(), 
+            poker.round,
             &ctx.remaining_accounts
         )?; 
 
@@ -282,31 +318,36 @@ pub mod random {
 
         require!(
             next_poker_player.id == next_player_id,
-            Error
+            CustomError::Unauthorized
         );
 
         require!(
-            next_poker_player.poker = poker.key(),
-            Error
+            next_poker_player.poker == poker.key(),
+            CustomError::Unauthorized
+        );
+
+        require!(
+            poker.showdown == false,
+            CustomError::Unauthorized
         );
 
         require!(
             poker.current_player_id == poker_player.id,
-            Error
+            CustomError::Unauthorized
         );
 
         require!(
             poker.pot_amount != 0,
-            Error
+            CustomError::Unauthorized,
         );
 
         require!(
             ctx.remaining_accounts.len() == poker.currently_playing as usize,
-            Error
+            CustomError::Unauthorized
         );
 
         let mut new_turn: bool = false;
-        if action == 0 {
+        if amount == 0 {
             if poker.current_raise > poker_player.raised_amount { //other wise ur checking
                 poker_player.chip_amount -= poker.current_raise;
                 poker_player.raised_amount = poker.current_raise;
@@ -317,23 +358,39 @@ pub mod random {
                 }
             }
 
-        } else if action > 0 { //raise
+        } else if amount > 0 { //raise
             require!(
-                amount > poker.last_raise,
-                Error
+                amount as u64 > poker.last_raise,
+                CustomError::TooSmall
             );
 
             poker.last_raise = amount as u64;
 
-            let raising_to = amount + poker.current_raise
+            let raising_to = amount as u64 + poker.current_raise;
             poker.current_raise = raising_to;
 
-            let player_puts_in = raising_to - poker_player.raised_amount
-            poker_player.chip_amount -= player_puts_in
+            let player_puts_in = raising_to - poker_player.raised_amount;
+            poker_player.chip_amount -= player_puts_in;
             poker_player.raised_amount = raising_to;
 
-        } else { // if action smaller than 0 fold
+        } else { // if amount smaller than 0 fold
             poker_player.round += 1;
+
+            if poker.current_raise > poker_player.raised_amount {
+                if poker.current_raise == next_poker_player.raised_amount {
+                    new_turn = true;
+                }
+            } else {
+                if poker.card_1 == 0 {
+                    if next_poker_player.id == big_blind_id {
+                        new_turn = true;
+                    }
+                } else {
+                    if next_poker_player.id == poker.dealer_id {
+                        new_turn = true;
+                    }
+                }
+            }
             // when folding, see if they folded because they had to call or they folded when they couldve just checked.
             // if folded because they had to call, check next_players current-raise and determine if new turn or not.
             // if folded when they couldve just checked, check to see if the next_player is the button / big blind depending on what cards have been revealed.
@@ -347,18 +404,18 @@ pub mod random {
         if new_turn == true { //means everyone matched the raise / folded, so we go to next round or showdown
 
             if poker.card_5 != 0 {
-                //SHOWDOWN
+                poker.showdown = true;
             } else {
                 if poker.card_1 == 0 {
-                    poker.card_1 = ;
-                    poker.card_2 = ;
-                    poker.card_3 = ;
+                    poker.card_1 = 1;
+                    poker.card_2 = 1;
+                    poker.card_3 = 1;
                 } else if poker.card_4 == 0 {
-                    poker.card_4 = ;
+                    poker.card_4 = 1;
                 } else if poker.card_5 == 0 {
-                    poker.card_5 = ;
+                    poker.card_5 = 1;
                 }  
-                poker.next_player_id = small_blind_id;
+                poker.current_player_id = small_blind_id;
                 
                 
             }
@@ -368,6 +425,7 @@ pub mod random {
                 poker.current_player_id, 
                 1,
                 poker.key(), 
+                poker.round,
                 &ctx.remaining_accounts
             )?; 
             poker.current_player_id = next_player_id;
@@ -377,9 +435,31 @@ pub mod random {
         // if so, new card on river based on how many cards have been revealed.
         // if card_5 has already been revealed, it's showdown time
         //next persons turn
+
+        Ok(())
     }
 
-    pub fn poker_buy_back_in
+    pub fn poker_show_cards(ctx: Context<PokerCall>, card_1: u8, card_2: u8) -> Result<()> { // 0 call/check | 0< raise |  fold
+        let poker = &mut ctx.accounts.poker;
+        let poker_player = &mut ctx.accounts.poker_player;
+
+
+        require!(
+            poker.round == poker_player.round,
+            CustomError::Unauthorized
+        );
+
+        require!(
+            poker.showdown == true,
+            CustomError::Unauthorized
+        );
+
+
+
+
+        
+        Ok(())
+    }
 
 
 
@@ -391,6 +471,7 @@ fn get_next_player_id(
     current_player_id: u64,
     steps_ahead: u64,
     poker_key: Pubkey,
+    poker_round: u64,
     remaining_accounts: &[AccountInfo],
 ) -> Result<u64> {
     let mut player_ids: Vec<u64> = vec![];
@@ -406,11 +487,23 @@ fn get_next_player_id(
             CustomError::Unauthorized
         );
 
+        if remaining_player_account.round != poker_round {
+            continue;
+        }
+
         player_ids.push(remaining_player_account.id);
     }
 
     // Sort player IDs in ascending order
     player_ids.sort_unstable();
+
+    // Return the first (smallest) ID if current_player_id is 0
+    if current_player_id == 0 {
+        return Ok(player_ids
+            .first()
+            .copied()
+            .ok_or(CustomError::Unauthorized)?);
+    }
 
     // Find the index of the current player
     let current_index = player_ids
@@ -479,7 +572,6 @@ pub struct InitializeDice<'info> {
     pub system_program: Program<'info, System>,
 }
 
-
 #[vrf]
 #[derive(Accounts)]
 pub struct DoRollDiceCtx<'info> {
@@ -534,6 +626,133 @@ pub struct InitializePoker<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct JoinPoker<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"POKER"],
+        bump
+    )]
+    pub poker: Account<'info, Poker>,
+
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + PokerPlayer::INIT_SPACE,
+        seeds = [b"PokerPlayer", poker.key().as_ref(), signer.key().as_ref()],
+        bump
+    )]
+    pub poker_player: Account<'info, PokerPlayer>,
+
+    #[account(
+        mut,
+        seeds = [b"TOKEN"],
+        bump,
+    )]
+    pub token_treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = signer,
+    )]
+    pub user_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+pub struct StartPoker<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"POKER"],
+        bump,
+    )]
+    pub poker: Account<'info, Poker>,
+
+    #[account(
+        mut,
+        seeds = [b"PokerPlayer", poker.key().as_ref(), signer.key().as_ref()],
+        bump
+    )]
+    pub poker_player: Account<'info, PokerPlayer>,
+
+    #[account(mut)]
+    pub big_blind_poker_player: Account<'info, PokerPlayer>,
+
+    #[account(mut)]
+    pub small_blind_poker_player: Account<'info, PokerPlayer>,
+
+
+    pub system_program: Program<'info, System>,
+
+}
+
+#[derive(Accounts)]
+pub struct PokerCall<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"POKER"],
+        bump,
+    )]
+    pub poker: Account<'info, Poker>,
+
+    #[account(
+        mut,
+        seeds = [b"PokerPlayer", poker.key().as_ref(), signer.key().as_ref()],
+        bump
+    )]
+    pub poker_player: Account<'info, PokerPlayer>,
+
+    #[account(mut)]
+    pub next_poker_player: Account<'info, PokerPlayer>,
+
+
+    pub system_program: Program<'info, System>,
+
+}
+
+#[derive(Accounts)]
+pub struct TurnPoker<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"POKER"],
+        bump,
+    )]
+    pub poker: Account<'info, Poker>,
+
+    #[account(
+        mut,
+        seeds = [b"PokerPlayer", poker.key().as_ref(), signer.key().as_ref()],
+        bump
+    )]
+    pub poker_player: Account<'info, PokerPlayer>,
+
+    #[account(mut)]
+    pub next_poker_player: Account<'info, PokerPlayer>,
+
+    pub system_program: Program<'info, System>,
+
+}
+
 
 #[account]
 #[derive(InitSpace)]
@@ -566,8 +785,10 @@ pub struct Poker {
     pub current_player_id: u64, //8  id of player whos turn is now
     pub dealer_id: u64,
 
-    pub round: u64 // 8
-    pub currently_playing: u64, //8
+    pub round: u64, // 8
+    pub currently_playing: u8, //8
+
+    pub showdown: bool, // 1
 }
 
 #[account]
@@ -582,7 +803,26 @@ pub struct PokerPlayer {
     pub raised_amount: u64, // 8
     pub round: u64, //8
 
+    pub card_1: u8, // 1
+    pub card_2: u8, // 2
 
     #[max_len(100)]
     pub username: String,
+
+}
+
+#[error_code]
+pub enum CustomError {
+    #[msg("Unauthorized")]
+    Unauthorized,
+    #[msg("Too Small")]
+    TooSmall,
+    #[msg("Too Big")]
+    TooBig
+}
+
+#[error_code]
+pub enum PokerError {
+    #[msg("Full Table")]
+    FullTable
 }

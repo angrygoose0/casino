@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-random = "HDxTSvJJ8MABXXo93usZeTxXG2URBPUovNuivjHmuNfq"
+random = "EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa"
 
 [registry]
 url = "https://api.apr.dev"
