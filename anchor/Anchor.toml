@@ -7,6 +7,7 @@ skip-lint = false
 
 [programs.devnet]
 random = "EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa"
+blackjack = "GUQb7sfh9G4wL3hEUkSkPPifLTb45z6GK5VtRcgZSFSS"
 
 [registry]
 url = "https://api.apr.dev"
