@@ -6,10 +6,10 @@ import { ellipsify } from '../ui/ui-layout'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import toast from 'react-hot-toast'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useAnteBlackjack, useBlackjackQuery, useInitTreasury, useJoinBlackjack } from './blackjack-data-access'
+import { useBlackjack, useBlackjackQuery, useInitTreasury } from './blackjack-data-access'
 
 export function JoinBlackJack() {
-  const { joinBlackjack } = useJoinBlackjack();
+  const { joinBlackjack } = useBlackjack();
   const {publicKey} = useWallet();
 
   const handleJoinBlackjackButton = useCallback(async () => {
@@ -36,7 +36,7 @@ export function JoinBlackJack() {
 }
 
 export function AnteBlackJack() {
-  const {anteBlackjack} = useAnteBlackjack();
+  const {anteBlackjack} = useBlackjack();
   const {publicKey} = useWallet();
 
   const handleAnteBlackjackButton = useCallback(async () => {

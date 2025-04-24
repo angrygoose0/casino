@@ -18,7 +18,7 @@ use anchor_spl::{
 };
 
 
-declare_id!("GUQb7sfh9G4wL3hEUkSkPPifLTb45z6GK5VtRcgZSFSS");
+declare_id!("53G3HGPsQnARPCKSdMABTUFLrjGm8uogSb3cdu4vqZcF");
 
 
 #[program]
@@ -48,7 +48,6 @@ pub mod blackjack {
             CustomError::Unauthorized,
         );
 
-
         Ok(())
     }
 
@@ -61,14 +60,14 @@ pub mod blackjack {
         blackjack.player = ctx.accounts.signer.key();
         blackjack.active_hands = 0;
 
-        let deck = &mut ctx.accounts.deck;
+        blackjack.total_owed = 0;
 
-        let clock = Clock::get()?;
-        let seed = keccak::hash(&clock.unix_timestamp.to_le_bytes()).0;
-
-        let shuffled = shuffled_deck_from_seed(seed);
-        deck.cards.copy_from_slice(&shuffled);
-        deck.drawn = 0;
+        blackjack.dealer_card_1 = 0;
+        blackjack.dealer_card_2 = 0;
+        blackjack.dealer_card_3 = 0;
+        blackjack.dealer_card_4 = 0;
+        blackjack.dealer_card_5 = 0;
+        blackjack.dealer_card_6 = 0;
 
         Ok(())
     }
@@ -110,7 +109,13 @@ pub mod blackjack {
         );
 
         let deck = &mut ctx.accounts.deck;
-        require!(deck.drawn < 52, CustomError::Unauthorized);
+
+        let clock = Clock::get()?;
+        let seed = keccak::hash(&clock.unix_timestamp.to_le_bytes()).0;
+
+        let shuffled = shuffled_deck_from_seed(seed);
+        deck.cards.copy_from_slice(&shuffled);
+        deck.drawn = 0;
 
         let card_1 = deck.cards[deck.drawn as usize];
         deck.drawn += 1;
@@ -119,6 +124,11 @@ pub mod blackjack {
         let card_3 = deck.cards[deck.drawn as usize];
         deck.drawn += 1;
 
+        let val_1 = get_card_value(card_1, true);
+        let val_2 = get_card_value(card_2, true);
+        let val_3 = get_card_value(card_3, true);
+
+        blackjack.dealer_card_1 = card_3;
 
         let blackjack_hand = &mut ctx.accounts.blackjack_hand;
 
@@ -126,6 +136,8 @@ pub mod blackjack {
         blackjack_hand.id = hand_id;
         blackjack_hand.state = 0;
         blackjack_hand.current_bet = player_bet;
+        blackjack_hand.insured = false;
+        
 
         blackjack_hand.player_card_1 = card_1; // give
         blackjack_hand.player_card_2 = card_2; //give
@@ -138,35 +150,95 @@ pub mod blackjack {
         blackjack_hand.player_card_9 = 0;
         blackjack_hand.player_card_10 = 0;
 
-        blackjack_hand.dealer_card_1 = card_3; //give
-        blackjack_hand.dealer_card_2 = 0;
-        blackjack_hand.dealer_card_3 = 0;
-        blackjack_hand.dealer_card_4 = 0;
-        blackjack_hand.dealer_card_5 = 0;
-        blackjack_hand.dealer_card_6 = 0;
-        blackjack_hand.dealer_card_7 = 0;
-        blackjack_hand.dealer_card_8 = 0;
-        blackjack_hand.dealer_card_9 = 0;
-        blackjack_hand.dealer_card_10 = 0;
+        // Check for blackjack
+        if (val_1 == 11 && val_2 == 10) || (val_1 == 10 && val_2 == 11) {
+            blackjack_hand.state = 3;
+        }
 
-        
+        let card_4 = deck.cards[deck.drawn as usize];
+        let val_4 = get_card_value(card_4, true);
+
+        if val_3 == 11 {
+            blackjack_hand.state = 1; //insurance state
+        }
+
+        if val_3 == 10 && val_4 == 11 {
+            blackjack.dealer_card_2 = card_4;
+            blackjack_hand.state = 3;
+        }
 
         Ok(())
     }
 
-    //pub fn insurance_blackjack() //player can choose to decline / accept insurance, which is paying half your original bet, after this functino is called, then do the random roll...
-    /*
-    pub fn hit_blackjack(
-        ctx: Context<BlackJackHand>,
+    pub fn insurance_blackjack(
+        ctx: Context<InsuranceBlackJack>,
+        _hand_id: u8,
+        insurance: bool
     ) -> Result<()> {
         let blackjack = &mut ctx.accounts.blackjack;
-
         let blackjack_hand = &mut ctx.accounts.blackjack_hand;
 
         require!(
-            blackjack_hand.blackjack == blackjack.key(),
+            blackjack_hand.state == 1,
             CustomError::Unauthorized
         );
+
+        let deck = &mut ctx.accounts.deck;
+        require!(deck.drawn < 52, CustomError::Unauthorized);
+
+        let card_4 = deck.cards[deck.drawn as usize];
+        let val_4 = get_card_value(card_4, true);
+
+
+        if insurance == true {
+            transfer_checked(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    TransferChecked {
+                        from: ctx.accounts.user_token_account.to_account_info(),
+                        to: ctx.accounts.token_treasury.to_account_info(),
+                        authority: ctx.accounts.signer.to_account_info(),
+                        mint: ctx.accounts.token_mint.to_account_info(),
+                    },   
+                ),
+                blackjack_hand.current_bet / 2,
+                TOKEN_DECIMALS,
+            );
+
+            blackjack_hand.insured = true;
+        }
+
+        if val_4 == 10 {
+            blackjack_hand.state = 3;
+            blackjack.dealer_card_2 = card_4;
+        } else {
+            blackjack_hand.state = 0;
+        }
+
+        Ok(())
+
+    
+
+    }//player can choose to decline / accept insurance, which is paying half your original bet, after this functino is called, then do the random roll...
+    
+    pub fn hit_blackjack(
+        ctx: Context<HitBlackJack>,
+        _hand_id: u8,
+    ) -> Result<()> {
+        let blackjack_hand = &mut ctx.accounts.blackjack_hand;
+        let deck = &mut ctx.accounts.deck;
+        require!(deck.drawn < 52, CustomError::Unauthorized);
+
+
+        require!(
+            blackjack_hand.state == 0,
+            CustomError::Unauthorized
+        );
+
+        let new_card = deck.cards[deck.drawn as usize];
+        deck.drawn += 1;
+
+        
 
         if blackjack_hand.player_card_3 == 0 {
             blackjack_hand.player_card_3 = new_card;
@@ -188,52 +260,385 @@ pub mod blackjack {
             // All slots are filled – maybe return an error?
             return Err(error!(CustomError::Unauthorized));
         }
+
+        let total: u8 = get_card_value(blackjack_hand.player_card_1, false)
+            + get_card_value(blackjack_hand.player_card_2, false)
+            + get_card_value(blackjack_hand.player_card_3, false)
+            + get_card_value(blackjack_hand.player_card_4, false)
+            + get_card_value(blackjack_hand.player_card_5, false)
+            + get_card_value(blackjack_hand.player_card_6, false)
+            + get_card_value(blackjack_hand.player_card_7, false)
+            + get_card_value(blackjack_hand.player_card_8, false)
+            + get_card_value(blackjack_hand.player_card_9, false)
+            + get_card_value(blackjack_hand.player_card_10, false);
+
+        if total > 21 {
+            blackjack_hand.state = 2; //BUST
+        }
+
+        Ok(())
 
 
     }
 
     pub fn stand_blackjack( // locks in their hand, gets dealers random cards, determines who won,
-        ctx: Context<BlackJackHand>,
+        ctx: Context<HitBlackJack>,
+        _hand_id: u8,
     ) -> Result<()> {
-        let blackjack = &mut ctx.accounts.blackjack;
-
         let blackjack_hand = &mut ctx.accounts.blackjack_hand;
 
         require!(
-            blackjack_hand.blackjack == blackjack.key(),
-            CustoError::Unauthorized
+            blackjack_hand.state == 0,
+            CustomError::Unauthorized
         );
 
-        if blackjack_hand.player_card_3 == 0 {
-            blackjack_hand.player_card_3 = new_card;
-        } else if blackjack_hand.player_card_4 == 0 {
-            blackjack_hand.player_card_4 = new_card;
-        } else if blackjack_hand.player_card_5 == 0 {
-            blackjack_hand.player_card_5 = new_card;
-        } else if blackjack_hand.player_card_6 == 0 {
-            blackjack_hand.player_card_6 = new_card;
-        } else if blackjack_hand.player_card_7 == 0 {
-            blackjack_hand.player_card_7 = new_card;
-        } else if blackjack_hand.player_card_8 == 0 {
-            blackjack_hand.player_card_8 = new_card;
-        } else if blackjack_hand.player_card_9 == 0 {
-            blackjack_hand.player_card_9 = new_card;
-        } else if blackjack_hand.player_card_10 == 0 {
-            blackjack_hand.player_card_10 = new_card;
-        } else {
-            // All slots are filled – maybe return an error?
-            return Err(error!(CustomError::Unauthorized));
-        }
+        blackjack_hand.state = 3;
 
+        Ok(())
 
     }
 
-    //pub fn split_blackjack // check if card_1 = card_2, if so, make a second instance of blackjackhand with an id using blackjack.active_hands, and then make it so we give them both new card_2, while keeping original card_1 as card_1., if the card being split is ace, players cannot hit more, and stands automatically.
+    pub fn split_blackjack( // check if card_1 = card_2, if so, make a second instance of blackjackhand with an id using blackjack.active_hands, and then make it so we give them both new card_2, while keeping original card_1 as card_1., if the card being split is ace, players cannot hit more, and stands automatically.
+        ctx: Context<SplitBlackJack>,
+        _hand_id: u8,
+        new_hand_id: u8,
+    ) -> Result<()> {
+        let blackjack = &mut ctx.accounts.blackjack;
+        let blackjack_hand = &mut ctx.accounts.blackjack_hand;
+        let new_blackjack_hand = &mut ctx.accounts.new_blackjack_hand;
+        let deck = &mut ctx.accounts.deck;
 
-    //pub fn double_blackjack // put in your current_bet again, update black_hand.current_bet *= 2, stands this hand automatically
+        require!(
+            blackjack_hand.state == 0,
+            CustomError::Unauthorized
+        );
 
-    //pub fn finish_game() // goes through each blackjack hand with a remaining account, make sure all hands have been stood or busted. sees which lost and which lost, pays out or not, deletes all the blackjack hand instances make blackjack.active_hands = 0
-    */
+        require!(
+            blackjack_hand.player_card_3 == 0,
+            CustomError::Unauthorized
+        );
+
+        blackjack.active_hands += 1;
+
+        require!(
+            blackjack.active_hands == new_hand_id,
+            CustomError::Unauthorized
+        );
+
+        transfer_checked(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                TransferChecked {
+                    from: ctx.accounts.user_token_account.to_account_info(),
+                    to: ctx.accounts.token_treasury.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                },   
+            ),
+            blackjack_hand.current_bet,
+            TOKEN_DECIMALS,
+        );
+
+        let new_card_1 = deck.cards[deck.drawn as usize];
+        deck.drawn += 1;
+
+        let new_card_2 = deck.cards[deck.drawn as usize];
+        deck.drawn += 1;
+        
+
+        blackjack_hand.player_card_2 = new_card_1; // new card
+
+        new_blackjack_hand.blackjack = blackjack.key();
+        new_blackjack_hand.current_bet = blackjack_hand.current_bet;
+        new_blackjack_hand.insured = false;
+        new_blackjack_hand.id = new_hand_id;
+        new_blackjack_hand.player_card_1 = blackjack_hand.player_card_1;
+        new_blackjack_hand.player_card_2 = new_card_2; //new card.
+        new_blackjack_hand.player_card_3 = 0;
+        new_blackjack_hand.player_card_4 = 0;
+        new_blackjack_hand.player_card_5 = 0;
+        new_blackjack_hand.player_card_6 = 0;
+        new_blackjack_hand.player_card_7 = 0;
+        new_blackjack_hand.player_card_8 = 0;
+        new_blackjack_hand.player_card_9 = 0;
+        new_blackjack_hand.player_card_10 = 0;
+
+
+        if get_card_value(blackjack_hand.player_card_1, true) == 11 {
+            blackjack_hand.state = 3;
+            new_blackjack_hand.state = 3;
+        } else {
+            let total: u8 = get_card_value(blackjack_hand.player_card_1, false)
+            + get_card_value(blackjack_hand.player_card_2, false);
+
+            let new_total: u8 = get_card_value(new_blackjack_hand.player_card_1, false)
+            + get_card_value(new_blackjack_hand.player_card_2, false);
+
+
+            if total > 21 {
+                blackjack_hand.state = 2; //BUST
+            } 
+            if new_total > 21 {
+                new_blackjack_hand.state = 2;
+            }
+        }  
+        
+        Ok(())
+
+    }
+    pub fn double_blackjack(// put in your current_bet again, update black_hand.current_bet *= 2, stands this hand automatically
+        ctx: Context<InsuranceBlackJack>,
+        _hand_id: u8,
+    ) -> Result<()> {
+
+        let blackjack_hand = &mut ctx.accounts.blackjack_hand;
+        let deck = &mut ctx.accounts.deck;
+
+        require!(
+            blackjack_hand.state == 0,
+            CustomError::Unauthorized
+        );
+
+        require!(
+            blackjack_hand.player_card_3 == 0,
+            CustomError::Unauthorized
+        );
+
+        blackjack_hand.current_bet *= 2;
+        transfer_checked(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                TransferChecked {
+                    from: ctx.accounts.user_token_account.to_account_info(),
+                    to: ctx.accounts.token_treasury.to_account_info(),
+                    authority: ctx.accounts.signer.to_account_info(),
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                },   
+            ),
+            blackjack_hand.current_bet,
+            TOKEN_DECIMALS,
+        );
+
+        let new_card = deck.cards[deck.drawn as usize];
+        deck.drawn += 1;
+
+        blackjack_hand.player_card_3 = new_card;
+        blackjack_hand.state = 3;
+
+        let total: u8 = get_card_value(blackjack_hand.player_card_1, false)
+            + get_card_value(blackjack_hand.player_card_2, false)
+            + get_card_value(blackjack_hand.player_card_3, false);
+
+        if total > 21 {
+            blackjack_hand.state = 2; //BUST
+        }
+        
+        
+
+        Ok(())
+
+    }
+
+    pub fn dealer_turn( // goes through each blackjack hand with a remaining account, make sure all hands have been stood or busted. sees which lost and which lost, pays out or not, deletes all the blackjack hand instances make blackjack.active_hands = 0
+        ctx: Context<DealerTurn>,
+    ) -> Result<()> {
+        let blackjack = &mut ctx.accounts.blackjack;
+        let deck = &mut ctx.accounts.deck;
+
+        require!(
+            ctx.remaining_accounts.len() == blackjack.active_hands as usize,
+            CustomError::Unauthorized
+        );
+
+        require!(
+            blackjack.dealer_card_2 != 0,
+            CustomError::Unauthorized
+        );
+
+        require!(
+            blackjack.total_owed == 0,
+            CustomError::Unauthorized
+        );
+
+
+        let new_card_1 = deck.cards[deck.drawn as usize];
+        deck.drawn += 1;
+
+        blackjack.dealer_card_2 = new_card_1;
+
+        let mut dealer_cards = vec![
+            blackjack.dealer_card_1,
+            blackjack.dealer_card_2,
+        ];
+
+        let mut dealer_total: u8 = 0;
+
+        while dealer_cards.len() < 6 {
+            // Calculate total and count aces
+            dealer_total = 0;
+            let mut ace_count = 0;
+
+            for card in &dealer_cards {
+                let val = get_card_value(*card, false);
+                if val == 1 {
+                    ace_count += 1;
+                }
+                dealer_total += val;
+                
+            }
+
+            if ace_count > 0 && dealer_total + 10 <= 21 {
+                dealer_total += 10;
+            }
+
+            // Dealer stands on hard 17+, hits on soft 17
+            if dealer_total > 17 || (dealer_total == 17 && ace_count == 0) {
+                break;
+            }
+
+            // Draw next card
+            let next = deck.cards[deck.drawn as usize];
+            deck.drawn += 1;
+            dealer_cards.push(next);
+
+            // Save to struct
+            match dealer_cards.len() {
+                3 => blackjack.dealer_card_3 = next,
+                4 => blackjack.dealer_card_4 = next,
+                5 => blackjack.dealer_card_5 = next,
+                6 => blackjack.dealer_card_6 = next,
+                _ => {}
+            }
+        }
+
+        if dealer_total > 21 {
+            dealer_total = 1;
+        }
+
+        let mut total_owed: u64 = 0;
+
+        for account in ctx.remaining_accounts.iter() {
+            let data = account.try_borrow_mut_data().map_err(|_| CustomError::Unauthorized)?;
+            
+            let blackjack_hand_instance = BlackJackHand::try_deserialize(&mut &data[..])
+                .map_err(|_| CustomError::Unauthorized)?;
+        
+            // Ensure it's a valid PlayerAccount before closing
+            require!(
+                blackjack_hand_instance.blackjack == blackjack.key(),
+                CustomError::Unauthorized
+            );
+
+            require!(
+                (blackjack_hand_instance.state == 3 || blackjack_hand_instance.state == 2),
+                CustomError::Unauthorized
+            );
+
+            if blackjack_hand_instance.state == 2 { //BUSTED
+                continue;
+            }
+
+            let cards = [
+                blackjack_hand_instance.player_card_1,
+                blackjack_hand_instance.player_card_2,
+                blackjack_hand_instance.player_card_3,
+                blackjack_hand_instance.player_card_4,
+                blackjack_hand_instance.player_card_5,
+                blackjack_hand_instance.player_card_6,
+                blackjack_hand_instance.player_card_7,
+                blackjack_hand_instance.player_card_8,
+                blackjack_hand_instance.player_card_9,
+                blackjack_hand_instance.player_card_10,
+            ];
+            
+
+            let mut ace_used_as_eleven = false;
+            let mut total: u8 = 0;
+
+            for &card in cards.iter() {
+                if card == 1 && !ace_used_as_eleven {
+                    total += get_card_value(card, true); // Ace as 11
+                    ace_used_as_eleven = true;
+                } else {
+                    total += get_card_value(card, false); // Regular value
+                }
+            }
+
+            // If total is over 21 and an Ace was used as 11, convert that Ace back to 1
+            if total > 21 && ace_used_as_eleven {
+                total -= 10; // Switch the Ace from 11 to 1 (11 - 1 = 10)
+            }
+
+            if total > 21 {
+                continue;
+            }
+
+            if total == dealer_total {
+                total_owed += blackjack_hand_instance.current_bet;
+            }
+
+            if total > dealer_total {
+                if total == 21 {
+                    // Blackjack wins with 3:2 payout
+                    total_owed += blackjack_hand_instance.current_bet * 5 / 2;
+                } else {
+                    total_owed += blackjack_hand_instance.current_bet * 2;
+                }
+            }
+
+            if total == 21 && blackjack_hand_instance.insured == true {
+                total_owed += blackjack_hand_instance.current_bet / 2;
+            }
+
+        
+            // ✅ Transfer lamports to the signer before closing
+            **ctx.accounts.signer.to_account_info().lamports.borrow_mut() += account.lamports();
+            **account.lamports.borrow_mut() = 0;
+        
+            // ✅ Mark the account for closing
+            **account.try_borrow_mut_lamports()? = 0; // Clears out the lamports
+        }
+
+        blackjack.total_owed = total_owed;
+
+        blackjack.active_hands = 0;
+
+        Ok(())
+    }
+
+    pub fn finish_game( // goes through each blackjack hand with a remaining account, make sure all hands have been stood or busted. sees which lost and which lost, pays out or not, deletes all the blackjack hand instances make blackjack.active_hands = 0
+        ctx: Context<FinishGame>,
+    ) -> Result<()> {
+        let blackjack = &mut ctx.accounts.blackjack;
+
+        require!(
+            blackjack.total_owed != 0,
+            CustomError::Unauthorized
+        );
+
+
+        let seeds = &["TOKEN".as_bytes(), &[ctx.bumps.token_treasury]];
+        let signer = [&seeds[..]];
+
+        transfer_checked(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                TransferChecked {
+                    from: ctx.accounts.token_treasury.to_account_info(),
+                    to: ctx.accounts.user_token_account.to_account_info(),
+                    authority: ctx.accounts.token_treasury.to_account_info(),
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                },
+                &signer,
+            ),
+            blackjack.total_owed,
+            TOKEN_DECIMALS,
+        )?;
+
+        blackjack.total_owed = 0;
+
+        Ok(())
+    }
     
 
     
@@ -247,6 +652,15 @@ fn shuffled_deck_from_seed(seed: [u8; 32]) -> [u8; 52] {
         deck.swap(i, j);
     }
     deck
+}
+
+fn get_card_value(card_id: u8, ace_high: bool) -> u8 {
+    let rank = (card_id - 1) % 13 + 1;
+    match rank {
+        1 => if ace_high { 11 } else { 1 },
+        11 | 12 | 13 => 10,
+        _ => rank,
+    }
 }
 
 #[derive(Accounts)]
@@ -298,14 +712,6 @@ pub struct JoinBlackJack<'info> {
     )]
     pub blackjack: Account<'info, BlackJack>,
 
-    #[account(
-        init,
-        payer = signer,
-        space = 8 + std::mem::size_of::<Deck>(), // 8 for discriminator
-        seeds = [b"DECK", blackjack.key().as_ref()],
-        bump
-    )]
-    pub deck: Account<'info, Deck>,
 
     pub system_program: Program<'info, System>,
 }
@@ -327,7 +733,9 @@ pub struct AnteBlackJack<'info> {
     pub blackjack: Account<'info, BlackJack>,
 
     #[account(
-        mut,
+        init,
+        payer = signer,
+        space = 8 + std::mem::size_of::<Deck>(), // 8 for discriminator
         seeds = [b"DECK", blackjack.key().as_ref()],
         bump
     )]
@@ -368,6 +776,128 @@ pub struct AnteBlackJack<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(
+    hand_id: u8,
+)]
+pub struct InsuranceBlackJack<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+
+    #[account(
+        mut,
+        seeds = [b"DECK", blackjack.key().as_ref()],
+        bump
+    )]
+    pub deck: Account<'info, Deck>,
+
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACKHAND", blackjack.key().as_ref(), &[hand_id]],
+        bump
+    )]
+    pub blackjack_hand: Account<'info, BlackJackHand>,
+
+
+    #[account(
+        mut,
+        seeds = [b"TOKEN"],
+        bump,
+    )]
+    pub token_treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = signer,
+    )]
+    pub user_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+#[instruction(
+    hand_id: u8,
+    new_hand_id: u8,
+)]
+pub struct SplitBlackJack<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+    
+
+    #[account(
+        mut,
+        seeds = [b"DECK", blackjack.key().as_ref()],
+        bump
+    )]
+    pub deck: Account<'info, Deck>,
+
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACKHAND", blackjack.key().as_ref(), &[hand_id]],
+        bump
+    )]
+    pub blackjack_hand: Account<'info, BlackJackHand>,
+
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + BlackJackHand::INIT_SPACE,
+        seeds = [b"BLACKJACKHAND", blackjack.key().as_ref(), &[new_hand_id]],
+        bump
+    )]
+    pub new_blackjack_hand: Account<'info, BlackJackHand>,
+
+
+    #[account(
+        mut,
+        seeds = [b"TOKEN"],
+        bump,
+    )]
+    pub token_treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = signer,
+    )]
+    pub user_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+#[derive(Accounts)]
+#[instruction(
+    hand_id: u8,
+)]
 pub struct HitBlackJack<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -379,11 +909,79 @@ pub struct HitBlackJack<'info> {
     )]
     pub blackjack: Account<'info, BlackJack>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"DECK", blackjack.key().as_ref()],
+        bump
+    )]
+    pub deck: Account<'info, Deck>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACKHAND", blackjack.key().as_ref(), &[hand_id]],
+        bump
+    )]
     pub blackjack_hand: Account<'info, BlackJackHand>,
 
-    
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct DealerTurn<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+
+    #[account(
+        mut,
+        close = signer,
+        seeds = [b"DECK", blackjack.key().as_ref()],
+        bump
+    )]
+    pub deck: Account<'info, Deck>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct FinishGame<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+
+    #[account(
+        mut,
+        seeds = [b"TOKEN"],
+        bump,
+    )]
+    pub token_treasury: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = signer,
+    )]
+    pub user_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+    
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 
@@ -393,9 +991,10 @@ pub struct BlackJackHand {
     pub blackjack: Pubkey,
     pub id: u8,
 
-    pub state: u8, // 0 active | 1 insurance | 2 busted | 3 stood (only one that has potential to win)
+    pub state: u8, // 0 playing | 1 insurance | 2 busted | 3 stood (only one that has potential to win) make sure all hands are either 2 or 3 when finishing
 
     pub current_bet: u64,
+    pub insured: bool,
 
     pub player_card_1: u8,
     pub player_card_2: u8,
@@ -407,17 +1006,8 @@ pub struct BlackJackHand {
     pub player_card_8: u8,
     pub player_card_9: u8,
     pub player_card_10: u8,
-
-    pub dealer_card_1: u8,
-    pub dealer_card_2: u8,
-    pub dealer_card_3: u8,
-    pub dealer_card_4: u8,
-    pub dealer_card_5: u8,
-    pub dealer_card_6: u8,
-    pub dealer_card_7: u8,
-    pub dealer_card_8: u8,
-    pub dealer_card_9: u8,
-    pub dealer_card_10: u8,
+    
+    pub bump: u8,
 }
 
 #[account]
@@ -425,7 +1015,18 @@ pub struct BlackJackHand {
 pub struct BlackJack {
     pub player: Pubkey,
     pub active_hands: u8,
-    
+
+    pub total_owed: u64,
+
+    pub dealer_card_1: u8,
+    pub dealer_card_2: u8,
+    pub dealer_card_3: u8,
+    pub dealer_card_4: u8,
+    pub dealer_card_5: u8,
+    pub dealer_card_6: u8,
+
+
+    pub bump: u8,
 }
 
 #[error_code]

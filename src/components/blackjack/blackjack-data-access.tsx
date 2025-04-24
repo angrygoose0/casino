@@ -85,7 +85,7 @@ export function useInitTreasury() {
   };
 }
 
-export function useJoinBlackjack() {
+export function useBlackjack() {
   const { program, programId } = useBlackjackProgram();
   const transactionToast = useTransactionToast();
   const { connection } = useConnection();
@@ -127,16 +127,6 @@ export function useJoinBlackjack() {
     },
   });
 
-  return {
-    joinBlackjack,
-  };
-}
-
-export function useAnteBlackjack() {
-  const { program, programId } = useBlackjackProgram();
-  const transactionToast = useTransactionToast();
-  const { connection } = useConnection();
-  const { sendTransaction, publicKey } = useWallet();
   const anteBlackjack = useMutation<
     string,
     Error
@@ -202,10 +192,78 @@ export function useAnteBlackjack() {
     },
   });
 
+  const hitBlackjack = useMutation<
+    string,
+    Error
+  >({
+    mutationKey: ['anteBlackjack'],
+    mutationFn: async ( ) => {
+      try {
+        if (publicKey === null) {
+          throw new Error('Wallet not connected');
+        }
+
+        const tokenTreaurySeeds = [
+          Buffer.from("TOKEN"),
+        ];
+        const tokenTreasuryPda = PublicKey.findProgramAddressSync(tokenTreaurySeeds, programId)[0];
+
+        console.log(tokenTreasuryPda.toString());
+
+        const playerBet = new BN(100000000000);
+
+        const blackjackSeeds = [
+          Buffer.from("BLACKJACK"),
+          publicKey.toBuffer(),
+        ];
+        const blackjackPda = PublicKey.findProgramAddressSync(blackjackSeeds, programId)[0];
+        
+        const blackjackHandSeeds = [
+          Buffer.from("BLACKJACKHAND"),
+          blackjackPda.toBuffer(),
+          Buffer.from([1]), // hand_id = 1
+        ];
+        const blackjackHandPda = PublicKey.findProgramAddressSync(blackjackHandSeeds, programId)[0];
+        console.log(blackjackHandPda.toString());
+
+        const ante = await program.methods
+          .anteBlackjack(1, playerBet)
+          .accounts({
+            signer: publicKey,
+            blackjackHand: blackjackHandPda,
+            
+            tokenMint: TOKEN_MINT,
+
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .rpc();
+
+        
+        return ante;
+
+
+      } catch (error) {
+        console.error("Error during transaction processing:", error);
+        throw error;
+      }
+    },
+
+    onSuccess: (signature) => {
+      transactionToast(signature);
+    },
+    onError: (error) => {
+      toast.error(`Error anteing ${error.message}`);
+      console.error('Toast error:', error);
+    },
+  });
+
   return {
-    anteBlackjack,
+    joinBlackjack,
+    anteBlackjack
   };
 }
+
+
 
 export function useBlackjackQuery() {
   const { program, programId } = useBlackjackProgram();

@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/blackjack.json`.
  */
 export type Blackjack = {
-  "address": "GUQb7sfh9G4wL3hEUkSkPPifLTb45z6GK5VtRcgZSFSS",
+  "address": "53G3HGPsQnARPCKSdMABTUFLrjGm8uogSb3cdu4vqZcF",
   "metadata": {
     "name": "blackjack",
     "version": "0.1.0",
@@ -218,6 +218,529 @@ export type Blackjack = {
       ]
     },
     {
+      "name": "dealerTurn",
+      "discriminator": [
+        152,
+        44,
+        234,
+        153,
+        56,
+        226,
+        138,
+        17
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "doubleBlackjack",
+      "discriminator": [
+        168,
+        189,
+        131,
+        131,
+        102,
+        163,
+        226,
+        56
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "tokenTreasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  84,
+                  79,
+                  75,
+                  69,
+                  78
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenMint",
+          "writable": true
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "finishGame",
+      "discriminator": [
+        168,
+        120,
+        86,
+        113,
+        64,
+        116,
+        2,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenTreasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  84,
+                  79,
+                  75,
+                  69,
+                  78
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenMint",
+          "writable": true
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "hitBlackjack",
+      "discriminator": [
+        93,
+        114,
+        225,
+        119,
+        2,
+        114,
+        248,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "initTreasuries",
       "discriminator": [
         2,
@@ -291,16 +814,16 @@ export type Blackjack = {
       "args": []
     },
     {
-      "name": "joinBlackjack",
+      "name": "insuranceBlackjack",
       "discriminator": [
-        177,
-        235,
-        55,
-        118,
-        97,
-        184,
-        97,
-        68
+        236,
+        220,
+        156,
+        167,
+        250,
+        156,
+        202,
+        150
       ],
       "accounts": [
         {
@@ -356,11 +879,483 @@ export type Blackjack = {
           }
         },
         {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "tokenTreasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  84,
+                  79,
+                  75,
+                  69,
+                  78
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenMint",
+          "writable": true
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        },
+        {
+          "name": "insurance",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "joinBlackjack",
+      "discriminator": [
+        177,
+        235,
+        55,
+        118,
+        97,
+        184,
+        97,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
+    },
+    {
+      "name": "splitBlackjack",
+      "discriminator": [
+        153,
+        94,
+        73,
+        185,
+        215,
+        155,
+        165,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "newBlackjackHand",
+          "writable": true
+        },
+        {
+          "name": "tokenTreasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  84,
+                  79,
+                  75,
+                  69,
+                  78
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenMint",
+          "writable": true
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "signer"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        },
+        {
+          "name": "newHandId",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "standBlackjack",
+      "discriminator": [
+        177,
+        239,
+        161,
+        152,
+        28,
+        230,
+        191,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -434,6 +1429,38 @@ export type Blackjack = {
           {
             "name": "activeHands",
             "type": "u8"
+          },
+          {
+            "name": "totalOwed",
+            "type": "u64"
+          },
+          {
+            "name": "dealerCard1",
+            "type": "u8"
+          },
+          {
+            "name": "dealerCard2",
+            "type": "u8"
+          },
+          {
+            "name": "dealerCard3",
+            "type": "u8"
+          },
+          {
+            "name": "dealerCard4",
+            "type": "u8"
+          },
+          {
+            "name": "dealerCard5",
+            "type": "u8"
+          },
+          {
+            "name": "dealerCard6",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -458,6 +1485,10 @@ export type Blackjack = {
           {
             "name": "currentBet",
             "type": "u64"
+          },
+          {
+            "name": "insured",
+            "type": "bool"
           },
           {
             "name": "playerCard1",
@@ -500,43 +1531,7 @@ export type Blackjack = {
             "type": "u8"
           },
           {
-            "name": "dealerCard1",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard2",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard3",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard4",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard5",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard6",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard7",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard8",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard9",
-            "type": "u8"
-          },
-          {
-            "name": "dealerCard10",
+            "name": "bump",
             "type": "u8"
           }
         ]
