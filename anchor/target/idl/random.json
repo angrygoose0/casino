@@ -799,18 +799,8 @@
   "errors": [
     {
       "code": 6000,
-      "name": "Unauthorized",
-      "msg": "Unauthorized"
-    },
-    {
-      "code": 6001,
-      "name": "TooSmall",
-      "msg": "Too Small"
-    },
-    {
-      "code": 6002,
-      "name": "TooBig",
-      "msg": "Too Big"
+      "name": "FullTable",
+      "msg": "Full Table"
     }
   ],
   "types": [

@@ -85,6 +85,7 @@ pub mod blackjack {
             CustomError::Unauthorized
         );
 
+
         transfer_checked(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -100,6 +101,11 @@ pub mod blackjack {
         );
 
         let blackjack = &mut ctx.accounts.blackjack;
+
+        require!(
+            blackjack.dealer_card_1 == 0,
+            CustomError::Unauthorized
+        );
 
 
         blackjack.active_hands += 1;
@@ -451,7 +457,7 @@ pub mod blackjack {
         );
 
         require!(
-            blackjack.dealer_card_2 != 0,
+            blackjack.dealer_card_2 == 0,
             CustomError::Unauthorized
         );
 
@@ -523,81 +529,76 @@ pub mod blackjack {
             let blackjack_hand_instance = BlackJackHand::try_deserialize(&mut &data[..])
                 .map_err(|_| CustomError::Unauthorized)?;
         
-            // Ensure it's a valid PlayerAccount before closing
+            // Ensure it's a valid PlayerAccount before proceeding
             require!(
                 blackjack_hand_instance.blackjack == blackjack.key(),
                 CustomError::Unauthorized
             );
-
+        
             require!(
                 (blackjack_hand_instance.state == 3 || blackjack_hand_instance.state == 2),
                 CustomError::Unauthorized
             );
-
-            if blackjack_hand_instance.state == 2 { //BUSTED
-                continue;
-            }
-
-            let cards = [
-                blackjack_hand_instance.player_card_1,
-                blackjack_hand_instance.player_card_2,
-                blackjack_hand_instance.player_card_3,
-                blackjack_hand_instance.player_card_4,
-                blackjack_hand_instance.player_card_5,
-                blackjack_hand_instance.player_card_6,
-                blackjack_hand_instance.player_card_7,
-                blackjack_hand_instance.player_card_8,
-                blackjack_hand_instance.player_card_9,
-                blackjack_hand_instance.player_card_10,
-            ];
-            
-
-            let mut ace_used_as_eleven = false;
-            let mut total: u8 = 0;
-
-            for &card in cards.iter() {
-                if card == 1 && !ace_used_as_eleven {
-                    total += get_card_value(card, true); // Ace as 11
-                    ace_used_as_eleven = true;
-                } else {
-                    total += get_card_value(card, false); // Regular value
+        
+            let mut payout = 0;
+        
+            if blackjack_hand_instance.state != 2 { // Not busted
+                let cards = [
+                    blackjack_hand_instance.player_card_1,
+                    blackjack_hand_instance.player_card_2,
+                    blackjack_hand_instance.player_card_3,
+                    blackjack_hand_instance.player_card_4,
+                    blackjack_hand_instance.player_card_5,
+                    blackjack_hand_instance.player_card_6,
+                    blackjack_hand_instance.player_card_7,
+                    blackjack_hand_instance.player_card_8,
+                    blackjack_hand_instance.player_card_9,
+                    blackjack_hand_instance.player_card_10,
+                ];
+        
+                let mut ace_used_as_eleven = false;
+                let mut total: u8 = 0;
+        
+                for &card in cards.iter() {
+                    if card == 1 && !ace_used_as_eleven {
+                        total += get_card_value(card, true);
+                        ace_used_as_eleven = true;
+                    } else {
+                        total += get_card_value(card, false);
+                    }
+                }
+        
+                if total > 21 && ace_used_as_eleven {
+                    total -= 10;
+                }
+        
+                if total <= 21 {
+                    if total == dealer_total {
+                        payout += blackjack_hand_instance.current_bet;
+                    } else if total > dealer_total {
+                        if total == 21 {
+                            payout += blackjack_hand_instance.current_bet * 5 / 2;
+                        } else {
+                            payout += blackjack_hand_instance.current_bet * 2;
+                        }
+                    }
+        
+                    if total == 21 && blackjack_hand_instance.insured {
+                        payout += blackjack_hand_instance.current_bet / 2;
+                    }
                 }
             }
-
-            // If total is over 21 and an Ace was used as 11, convert that Ace back to 1
-            if total > 21 && ace_used_as_eleven {
-                total -= 10; // Switch the Ace from 11 to 1 (11 - 1 = 10)
-            }
-
-            if total > 21 {
-                continue;
-            }
-
-            if total == dealer_total {
-                total_owed += blackjack_hand_instance.current_bet;
-            }
-
-            if total > dealer_total {
-                if total == 21 {
-                    // Blackjack wins with 3:2 payout
-                    total_owed += blackjack_hand_instance.current_bet * 5 / 2;
-                } else {
-                    total_owed += blackjack_hand_instance.current_bet * 2;
-                }
-            }
-
-            if total == 21 && blackjack_hand_instance.insured == true {
-                total_owed += blackjack_hand_instance.current_bet / 2;
-            }
-
+        
+            total_owed += payout;
         
             // ✅ Transfer lamports to the signer before closing
             **ctx.accounts.signer.to_account_info().lamports.borrow_mut() += account.lamports();
             **account.lamports.borrow_mut() = 0;
         
             // ✅ Mark the account for closing
-            **account.try_borrow_mut_lamports()? = 0; // Clears out the lamports
+            **account.try_borrow_mut_lamports()? = 0;
         }
+        
 
         blackjack.total_owed = total_owed;
 
@@ -606,36 +607,49 @@ pub mod blackjack {
         Ok(())
     }
 
-    pub fn finish_game( // goes through each blackjack hand with a remaining account, make sure all hands have been stood or busted. sees which lost and which lost, pays out or not, deletes all the blackjack hand instances make blackjack.active_hands = 0
+    pub fn finish_game(
         ctx: Context<FinishGame>,
     ) -> Result<()> {
         let blackjack = &mut ctx.accounts.blackjack;
 
         require!(
-            blackjack.total_owed != 0,
+            blackjack.active_hands == 0,
             CustomError::Unauthorized
         );
 
+        require!(
+            blackjack.dealer_card_2 != 0,
+            CustomError::Unauthorized
+        );
+        
+        if blackjack.total_owed != 0 {
+            let seeds = &["TOKEN".as_bytes(), &[ctx.bumps.token_treasury]];
+            let signer = [&seeds[..]];
 
-        let seeds = &["TOKEN".as_bytes(), &[ctx.bumps.token_treasury]];
-        let signer = [&seeds[..]];
+            transfer_checked(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    TransferChecked {
+                        from: ctx.accounts.token_treasury.to_account_info(),
+                        to: ctx.accounts.user_token_account.to_account_info(),
+                        authority: ctx.accounts.token_treasury.to_account_info(),
+                        mint: ctx.accounts.token_mint.to_account_info(),
+                    },
+                    &signer,
+                ),
+                blackjack.total_owed,
+                TOKEN_DECIMALS,
+            )?;
+        }
 
-        transfer_checked(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                TransferChecked {
-                    from: ctx.accounts.token_treasury.to_account_info(),
-                    to: ctx.accounts.user_token_account.to_account_info(),
-                    authority: ctx.accounts.token_treasury.to_account_info(),
-                    mint: ctx.accounts.token_mint.to_account_info(),
-                },
-                &signer,
-            ),
-            blackjack.total_owed,
-            TOKEN_DECIMALS,
-        )?;
 
         blackjack.total_owed = 0;
+        blackjack.dealer_card_1 = 0;
+        blackjack.dealer_card_2 = 0;
+        blackjack.dealer_card_3 = 0;
+        blackjack.dealer_card_4 = 0;
+        blackjack.dealer_card_5 = 0;
+        blackjack.dealer_card_6 = 0;
 
         Ok(())
     }
@@ -655,6 +669,10 @@ fn shuffled_deck_from_seed(seed: [u8; 32]) -> [u8; 52] {
 }
 
 fn get_card_value(card_id: u8, ace_high: bool) -> u8 {
+    if card_id == 0 {
+        return 0;
+    }
+
     let rank = (card_id - 1) % 13 + 1;
     match rank {
         1 => if ace_high { 11 } else { 1 },
