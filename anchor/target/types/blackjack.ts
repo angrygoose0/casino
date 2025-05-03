@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/blackjack.json`.
  */
 export type Blackjack = {
-  "address": "53G3HGPsQnARPCKSdMABTUFLrjGm8uogSb3cdu4vqZcF",
+  "address": "E2UwwZmxGwDdx1CZywPsLN2HPu27nLqN7chWBT1x8P2b",
   "metadata": {
     "name": "blackjack",
     "version": "0.1.0",
@@ -214,6 +214,167 @@ export type Blackjack = {
         {
           "name": "playerBet",
           "type": "u64"
+        },
+        {
+          "name": "customDeck",
+          "type": {
+            "option": {
+              "array": [
+                "u8",
+                52
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "commitUndelegateBlackjack",
+      "discriminator": [
+        66,
+        226,
+        219,
+        200,
+        232,
+        167,
+        10,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "magicProgram",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magicContext",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "commitUndelegateBlackjackHand",
+      "discriminator": [
+        67,
+        15,
+        193,
+        74,
+        28,
+        236,
+        60,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "magicProgram",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magicContext",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
         }
       ]
     },
@@ -288,6 +449,547 @@ export type Blackjack = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "delegateBlackjack",
+      "discriminator": [
+        20,
+        9,
+        18,
+        52,
+        77,
+        213,
+        76,
+        184
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "bufferBlackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                193,
+                137,
+                28,
+                100,
+                209,
+                190,
+                240,
+                189,
+                176,
+                139,
+                191,
+                210,
+                203,
+                198,
+                185,
+                200,
+                27,
+                105,
+                107,
+                67,
+                255,
+                175,
+                31,
+                140,
+                136,
+                210,
+                53,
+                150,
+                191,
+                148,
+                235,
+                124
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegationRecordBlackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "delegationMetadataBlackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bufferDeck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deck"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                193,
+                137,
+                28,
+                100,
+                209,
+                190,
+                240,
+                189,
+                176,
+                139,
+                191,
+                210,
+                203,
+                198,
+                185,
+                200,
+                27,
+                105,
+                107,
+                67,
+                255,
+                175,
+                31,
+                140,
+                136,
+                210,
+                53,
+                150,
+                191,
+                148,
+                235,
+                124
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegationRecordDeck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deck"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "delegationMetadataDeck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "deck"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "ownerProgram",
+          "address": "E2UwwZmxGwDdx1CZywPsLN2HPu27nLqN7chWBT1x8P2b"
+        },
+        {
+          "name": "delegationProgram",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "delegateBlackjackHand",
+      "discriminator": [
+        132,
+        107,
+        134,
+        229,
+        190,
+        119,
+        8,
+        119
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bufferBlackjackHand",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjackHand"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                193,
+                137,
+                28,
+                100,
+                209,
+                190,
+                240,
+                189,
+                176,
+                139,
+                191,
+                210,
+                203,
+                198,
+                185,
+                200,
+                27,
+                105,
+                107,
+                67,
+                255,
+                175,
+                31,
+                140,
+                136,
+                210,
+                53,
+                150,
+                191,
+                148,
+                235,
+                124
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegationRecordBlackjackHand",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjackHand"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "delegationMetadataBlackjackHand",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjackHand"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegationProgram"
+            }
+          }
+        },
+        {
+          "name": "blackjackHand",
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "ownerProgram",
+          "address": "E2UwwZmxGwDdx1CZywPsLN2HPu27nLqN7chWBT1x8P2b"
+        },
+        {
+          "name": "delegationProgram",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        }
+      ],
+      "args": [
+        {
+          "name": "handId",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "doubleBlackjack",
@@ -529,6 +1231,27 @@ export type Blackjack = {
               {
                 "kind": "account",
                 "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
               }
             ]
           }
@@ -1067,6 +1790,43 @@ export type Blackjack = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "processUndelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "writable": true
+        },
+        {
+          "name": "buffer"
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "accountSeeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
     },
     {
       "name": "splitBlackjack",

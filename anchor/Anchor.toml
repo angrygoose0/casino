@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-blackjack = "53G3HGPsQnARPCKSdMABTUFLrjGm8uogSb3cdu4vqZcF"
+blackjack = "E2UwwZmxGwDdx1CZywPsLN2HPu27nLqN7chWBT1x8P2b"
 random = "EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa"
 
 [registry]
