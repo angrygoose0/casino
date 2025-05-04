@@ -23,10 +23,11 @@ pub mod random {
     //mainnet: pub const TOKEN_MINT: Pubkey = pubkey!("5gVSqhk41VA8U6U4Pvux6MSxFWqgptm3w58X9UTGpump");
     pub const TOKEN_MINT: Pubkey = pubkey!("D2BYx2UoshNpAfgBEXEEyfUKxLSxkLMAb6zeZhZYgoos");
     pub const TOKEN_DECIMALS: u8 = 9;
+    pub const SOLANA_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
 
     pub const FEE_PERCENTAGE: u8 = 100; // divide by 100 so 1%
 
-    pub const SOLANA_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+    
 
     pub const WAIT_TIME: i64 = 120; //2 minutes
 
