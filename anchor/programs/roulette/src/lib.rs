@@ -20,6 +20,7 @@ pub mod roulette {
     pub const TOKEN_MINT: Pubkey = pubkey!("D2BYx2UoshNpAfgBEXEEyfUKxLSxkLMAb6zeZhZYgoos");
     pub const TOKEN_DECIMALS: u8 = 9;
     pub const SOLANA_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+    pub const ADMIN_PUBKEY: Pubkey = pubkey!("Acse84NTCnREnVPJQPg3KgLbFXVwBtDVZsCcMmLs6Jnj");
 
     pub const SPIN_INTERVAL: i64 = 60; //1 minute
 
@@ -203,6 +204,32 @@ pub mod roulette {
         
         Ok(())
     }
+
+    pub fn admin_withdraw(
+        ctx: Context<AdminWithdraw>,
+    ) -> Result<()> {
+        let treasury_balance = ctx.accounts.token_treasury.amount;
+        
+        let seeds = &["TOKEN".as_bytes(), &[ctx.bumps.token_treasury]];
+        let signer = [&seeds[..]];
+
+        transfer_checked(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                TransferChecked {
+                    from: ctx.accounts.token_treasury.to_account_info(),
+                    to: ctx.accounts.admin_token_account.to_account_info(),
+                    authority: ctx.accounts.token_treasury.to_account_info(),
+                    mint: ctx.accounts.token_mint.to_account_info(),
+                },
+                &signer,
+            ),
+            treasury_balance,
+            TOKEN_DECIMALS,
+        )?;
+        
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -358,7 +385,35 @@ pub struct Claim<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
+#[derive(Accounts)]
+pub struct AdminWithdraw<'info> {
+    #[account(mut, address = ADMIN_PUBKEY)]
+    pub signer: Signer<'info>,
+    
+    #[account(
+        mut,
+        seeds = [b"TOKEN"],
+        bump,
+    )]
+    pub token_treasury: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    #[account(
+        address = crate::roulette::TOKEN_MINT
+    )]
+    pub token_mint: Box<InterfaceAccount<'info, Mint>>,
+
+    #[account(
+        init_if_needed,
+        payer = signer,
+        associated_token::mint = token_mint,
+        associated_token::authority = signer,
+    )]
+    pub admin_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+}
 
 #[account]
 #[derive(InitSpace)]

@@ -153,7 +153,6 @@ pub mod blackjack {
     }
     
 
-
     //delegate new hand and deck and blackjack
     pub fn ante_blackjack( // if blackjack, stand automatically, will pay 1.5x when finishing turn | if dealer's first card is ACE, give players an option for insurance, if dealer's first card is ace / face card, do a random roll to see if its blackjack or not. if it is, the hand is stood automatically, and the player can only do next_turn, which will take the money, or give back the original bet if player has blackjack, or give some back because of the insurance bet.
         ctx: Context<AnteBlackJack>,
@@ -249,19 +248,9 @@ pub mod blackjack {
         }
 
 
-        let card_4 = deck.cards[deck.drawn as usize];
-        let val_4 = get_card_value(card_4, true);
-
         if val_3 == 11 {
             ctx.accounts.blackjack_hand.state = 1; //insurance state
         }
-
-        if val_3 == 10 && val_4 == 11 {
-            blackjack.dealer_card_2 = card_4;
-            ctx.accounts.blackjack_hand.state = 3;
-        }
-
-
 
         Ok(())
     }
@@ -305,13 +294,7 @@ pub mod blackjack {
                 blackjack_hand.insured = true;
             }
 
-            if val_4 == 10 {
-                blackjack_hand.state = 3;
-
-                //blackjack.dealer_card_2 = card_4;   TEMPORARY SOLUTION, IF WE END UP ALLOWING MULTIPLE BETS AT ONCE, CANT DO THIS BECAUSE THE NEXT CARD WILL ALWAYS BE DEALER_CARD_2 WHEN THERES ONLY ONE HAND IN PLAY.
-            } else {
-                blackjack_hand.state = 0;
-            }
+            blackjack_hand.state = 0;
         }
 
         /*
@@ -603,7 +586,6 @@ pub mod blackjack {
     pub fn dealer_turn( // goes through each blackjack hand with a remaining account, make sure all hands have been stood or busted. sees which lost and which lost, pays out or not, deletes all the blackjack hand instances make blackjack.active_hands = 0
         ctx: Context<DealerTurn>,
     ) -> Result<()> {
-
         {
             let blackjack = &mut ctx.accounts.blackjack;
             let deck = &mut ctx.accounts.deck;
@@ -639,23 +621,24 @@ pub mod blackjack {
             while dealer_cards.len() < 6 {
                 // Calculate total and count aces
                 dealer_total = 0;
-                let mut ace_count = 0;
 
+                let mut ace_used_as_eleven = false;
                 for card in &dealer_cards {
-                    let val = get_card_value(*card, false);
-                    if val == 1 {
-                        ace_count += 1;
+                    let mut val = get_card_value(*card, false);
+                    if val == 1 && !ace_used_as_eleven {
+                        val = 11;
+                        ace_used_as_eleven = true;
                     }
                     dealer_total += val;
                     
                 }
 
-                if ace_count > 0 && dealer_total + 10 <= 21 {
-                    dealer_total += 10;
+                if dealer_total > 21 && ace_used_as_eleven {
+                    dealer_total -= 10;
                 }
 
                 // Dealer stands on hard 17+, hits on soft 17
-                if dealer_total > 17 || (dealer_total == 17 && ace_count == 0) {
+                if dealer_total > 17 || (dealer_total == 17 && !ace_used_as_eleven) {
                     break;
                 }
 
@@ -691,9 +674,7 @@ pub mod blackjack {
                     CustomError::Unauthorized
                 );
 
-
-
-                let mut payout = 0;
+                let mut payout: u64 = 0;
             
                 if blackjack_hand_instance.state != 2 { // Not busted
                     let cards = [
@@ -711,15 +692,18 @@ pub mod blackjack {
             
                     let mut ace_used_as_eleven = false;
                     let mut total: u8 = 0;
+
+                    
             
                     for &card in cards.iter() {
-                        if card == 1 && !ace_used_as_eleven {
-                            total += get_card_value(card, true);
+                        let mut val = get_card_value(card, false);
+                        if val == 1 && !ace_used_as_eleven {
+                            val = 11;
                             ace_used_as_eleven = true;
-                        } else {
-                            total += get_card_value(card, false);
                         }
+                        total += val;
                     }
+
             
                     if total > 21 && ace_used_as_eleven {
                         total -= 10;
