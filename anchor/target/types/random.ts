@@ -805,18 +805,8 @@ export type Random = {
   "errors": [
     {
       "code": 6000,
-      "name": "unauthorized",
-      "msg": "unauthorized"
-    },
-    {
-      "code": 6001,
-      "name": "tooSmall",
-      "msg": "Too Small"
-    },
-    {
-      "code": 6002,
-      "name": "tooBig",
-      "msg": "Too Big"
+      "name": "fullTable",
+      "msg": "Full Table"
     }
   ],
   "types": [

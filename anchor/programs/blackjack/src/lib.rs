@@ -21,7 +21,7 @@ use anchor_spl::{
 };
 
 
-declare_id!("E2UwwZmxGwDdx1CZywPsLN2HPu27nLqN7chWBT1x8P2b");
+declare_id!("8v5jUevcVDJWLN7sUM7NBucBt9T9x3qHwAB79mZcoN3U");
 
 
 #[ephemeral]
@@ -264,9 +264,6 @@ pub mod blackjack {
         let deck = &ctx.accounts.deck;
 
         require!(deck.drawn < 52, CustomError::Unauthorized);
-
-        let card_4 = deck.cards[deck.drawn as usize];
-        let val_4 = get_card_value(card_4, true);
 
         {
             let blackjack_hand = &mut ctx.accounts.blackjack_hand;
@@ -719,12 +716,13 @@ pub mod blackjack {
                                 payout += blackjack_hand_instance.current_bet * 2;
                             }
                         }
-            
-                        if total == 21 && blackjack_hand_instance.insured {
-                            payout += blackjack_hand_instance.current_bet / 2;
-                        }
                     }
                 }
+
+                if dealer_total == 21 && blackjack_hand_instance.insured {
+                    payout += blackjack_hand_instance.current_bet * 3 / 2;
+                }
+
                 total_owed += payout;
             }
             
