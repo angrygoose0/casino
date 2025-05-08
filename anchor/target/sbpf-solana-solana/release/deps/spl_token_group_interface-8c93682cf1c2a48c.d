@@ -1,0 +1,10 @@
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/spl_token_group_interface-8c93682cf1c2a48c.so: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/instruction.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/state.rs
+
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/libspl_token_group_interface-8c93682cf1c2a48c.rlib: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/instruction.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/state.rs
+
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/spl_token_group_interface-8c93682cf1c2a48c.d: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/instruction.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/state.rs
+
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/lib.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/error.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/instruction.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.5.0/src/state.rs:

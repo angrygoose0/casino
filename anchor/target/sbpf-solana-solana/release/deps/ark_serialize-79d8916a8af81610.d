@@ -1,0 +1,11 @@
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/libark_serialize-79d8916a8af81610.rmeta: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/flags.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/impls.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/../README.md
+
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/libark_serialize-79d8916a8af81610.rlib: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/flags.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/impls.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/../README.md
+
+/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/ark_serialize-79d8916a8af81610.d: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/error.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/flags.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/impls.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/../README.md
+
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/lib.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/error.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/flags.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/impls.rs:
+/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ark-serialize-0.5.0/src/../README.md:

@@ -8,6 +8,7 @@ use anchor_lang::{
     },
     system_program,
 };
+
 use ephemeral_vrf_sdk::anchor::vrf;
 use ephemeral_vrf_sdk::instructions::{create_request_randomness_ix, RequestRandomnessParams};
 use ephemeral_vrf_sdk::types::SerializableAccountMeta;
@@ -18,6 +19,15 @@ use ephemeral_rollups_sdk::ephem::{commit_accounts, commit_and_undelegate_accoun
 use anchor_spl::{
     associated_token::{AssociatedToken},
     token_interface::{Mint, TokenAccount, TokenInterface, transfer_checked, TransferChecked, SyncNative, sync_native},
+};
+
+use light_sdk::{
+    account::LightAccount,
+    address::v1::derive_address,
+    cpi::{accounts::CompressionCpiAccounts, verify::verify_compressed_account_infos},
+    error::LightSdkError,
+    instruction::{account_meta::CompressedAccountMeta, instruction_data::LightInstructionData},
+    LightDiscriminator, LightHasher, NewAddressParamsPacked,
 };
 
 
@@ -74,6 +84,52 @@ pub mod blackjack {
         blackjack.dealer_card_5 = 0;
         blackjack.dealer_card_6 = 0;
 
+
+        Ok(())
+    }
+
+
+    //only call after joining before anteing.
+    pub fn shuffle_deck(ctx: Context<DoShuffleDeckCtx>, client_seed: u8) -> Result<()> {
+        let blackjack = &ctx.accounts.blackjack;
+
+        require!(
+            blackjack.active_hands == 0,
+            CustomError::Unauthorized
+        );
+
+        msg!("Requesting randomness...");
+        let ix = create_request_randomness_ix(RequestRandomnessParams {
+            payer: ctx.accounts.signer.key(),
+            oracle_queue: ctx.accounts.oracle_queue.key(),
+            callback_program_id: ID,
+            callback_discriminator: instruction::CallbackShuffleDeck::DISCRIMINATOR.to_vec(),
+            caller_seed: [client_seed; 32],
+            // Specify any account that is required by the callback
+            accounts_metas: Some(vec![
+                SerializableAccountMeta {
+                    pubkey: ctx.accounts.deck.key(),
+                    is_signer: false,
+                    is_writable: true,
+                }
+            ]),
+            ..Default::default()
+        });
+        ctx.accounts
+            .invoke_signed_vrf(&ctx.accounts.signer.to_account_info(), &ix)?;
+        Ok(())
+    }
+  
+    pub fn callback_shuffle_deck(
+        ctx: Context<CallbackShuffleDeckCtx>,
+        randomness: [u8; 32],
+    ) -> Result<()> {
+        let deck = &mut ctx.accounts.deck;
+        
+        // Use the helper function to get a shuffled deck
+        let shuffled = shuffled_deck_from_seed(randomness);
+        deck.cards.copy_from_slice(&shuffled);
+        deck.drawn = 0;
 
         Ok(())
     }
@@ -158,7 +214,6 @@ pub mod blackjack {
         ctx: Context<AnteBlackJack>,
         hand_id: u8,
         player_bet: u64,
-        custom_deck: Option<[u8; 52]>,
     ) -> Result<()> {
 
         require!(
@@ -196,16 +251,14 @@ pub mod blackjack {
 
         let deck = &mut ctx.accounts.deck;
 
-        // Use custom deck if provided, otherwise generate random deck
-        if let Some(custom) = custom_deck {
-            deck.cards.copy_from_slice(&custom);
-        } else {
-            let clock = Clock::get()?;
-            let seed = keccak::hash(&clock.unix_timestamp.to_le_bytes()).0;
-            let shuffled = shuffled_deck_from_seed(seed);
-            deck.cards.copy_from_slice(&shuffled);
-        }
+        /*
+        let clock = Clock::get()?;
+        let seed = keccak::hash(&clock.unix_timestamp.to_le_bytes()).0;
+        let shuffled = shuffled_deck_from_seed(seed);
+        deck.cards.copy_from_slice(&shuffled);
         deck.drawn = 0;
+        */
+
 
         let card_1 = deck.cards[deck.drawn as usize];
         deck.drawn += 1;
@@ -845,6 +898,44 @@ fn get_card_value(card_id: u8, ace_high: bool) -> u8 {
     }
 }
 
+#[vrf]
+#[derive(Accounts)]
+pub struct DoShuffleDeckCtx<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+
+    #[account(
+        init,
+        payer = signer,
+        space = 8 + std::mem::size_of::<Deck>(), // 8 for discriminator
+        seeds = [b"DECK", blackjack.key().as_ref()],
+        bump
+    )]
+    pub deck: Account<'info, Deck>,
+
+    /// CHECK: The oracle queue
+    #[account(mut, address = ephemeral_vrf_sdk::consts::DEFAULT_QUEUE)]
+    pub oracle_queue: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CallbackShuffleDeckCtx<'info> {
+    /// This check ensure that the vrf_program_identity (which is a PDA) is a singer
+    /// enforcing the callback is executed by the VRF program trough CPI
+    #[account(address = ephemeral_vrf_sdk::consts::VRF_PROGRAM_IDENTITY)]
+    pub vrf_program_identity: Signer<'info>,
+
+    #[account(mut)]
+    pub deck: Account<'info, Deck>,
+}
+
 #[derive(Accounts)]
 pub struct InitializeTreasuries<'info> {
     #[account(mut)]
@@ -963,9 +1054,7 @@ pub struct AnteBlackJack<'info> {
     pub blackjack: Account<'info, BlackJack>,
 
     #[account(
-        init,
-        payer = signer,
-        space = 8 + std::mem::size_of::<Deck>(), // 8 for discriminator
+        mut,
         seeds = [b"DECK", blackjack.key().as_ref()],
         bump
     )]

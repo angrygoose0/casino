@@ -17,7 +17,12 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 [dependencies]
-anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
+anchor-lang = { version = "=0.31.0", features = ["init-if-needed"] }
 anchor-spl = { version = "=0.31.0", features = ["memo"] }
-ephemeral-vrf-sdk = {version = "0.1.2", features = ["anchor"]}
-ephemeral-rollups-sdk = { version = "0.2.5", features = ["anchor"] }
+ephemeral-vrf-sdk = { version = "=0.1.2", features = ["anchor"] }
+ephemeral-rollups-sdk = { version = "=0.2.5", features = ["anchor"] }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol.git", package = "light-hasher", features = ["solana"], rev = "5b2ba400" }
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol.git", package = "light-sdk", rev = "5b2ba400" }
+light-compressed-account = { git = "https://github.com/Lightprotocol/light-protocol.git", package = "light-compressed-account", rev = "5b2ba400" }
+
+

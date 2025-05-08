@@ -214,16 +214,44 @@ export type Blackjack = {
         {
           "name": "playerBet",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "callbackShuffleDeck",
+      "discriminator": [
+        3,
+        83,
+        201,
+        92,
+        146,
+        107,
+        225,
+        232
+      ],
+      "accounts": [
+        {
+          "name": "vrfProgramIdentity",
+          "docs": [
+            "This check ensure that the vrf_program_identity (which is a PDA) is a singer",
+            "enforcing the callback is executed by the VRF program trough CPI"
+          ],
+          "signer": true,
+          "address": "9irBy75QS2BN81FUgXuHcjqceJJRuc9oDkAe8TKVvvAw"
         },
         {
-          "name": "customDeck",
+          "name": "deck",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
           "type": {
-            "option": {
-              "array": [
-                "u8",
-                52
-              ]
-            }
+            "array": [
+              "u8",
+              32
+            ]
           }
         }
       ]
@@ -1825,6 +1853,116 @@ export type Blackjack = {
           "type": {
             "vec": "bytes"
           }
+        }
+      ]
+    },
+    {
+      "name": "shuffleDeck",
+      "discriminator": [
+        170,
+        78,
+        41,
+        200,
+        254,
+        119,
+        185,
+        79
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "blackjack",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  66,
+                  76,
+                  65,
+                  67,
+                  75,
+                  74,
+                  65,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deck",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  68,
+                  69,
+                  67,
+                  75
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "blackjack"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracleQueue",
+          "writable": true,
+          "address": "Cuj97ggrhhidhbu39TijNVqE74xvKJ69gDervRUXAxGh"
+        },
+        {
+          "name": "programIdentity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrfProgram",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slotHashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "clientSeed",
+          "type": "u8"
         }
       ]
     },
