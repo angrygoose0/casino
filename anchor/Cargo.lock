@@ -178,9 +178,9 @@ dependencies = [
 
 [[package]]
 name = "anchor-lang"
-version = "0.31.0"
+version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eba81a0543fee1b7b610fe9ebedbae6a14e8d3e85a6a6dd48871d48a08880195"
+checksum = "e6bab117055905e930f762c196e08f861f8dfe7241b92cee46677a3b15561a0a"
 dependencies = [
  "anchor-attribute-access-control",
  "anchor-attribute-account",
@@ -227,9 +227,9 @@ dependencies = [
 
 [[package]]
 name = "anchor-spl"
-version = "0.31.0"
+version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9d989ebc64e6c1a9828d3a6f7b8e7a4d63cc8a4f667dcb191bd9067a3375c20"
+checksum = "3c08cb5d762c0694f74bd02c9a5b04ea53cefc496e2c27b3234acffca5cd076b"
 dependencies = [
  "anchor-lang",
  "spl-associated-token-account",
@@ -1253,7 +1253,7 @@ dependencies = [
 [[package]]
 name = "light-account-checks"
 version = "0.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "solana-account-info",
  "solana-program-error",
@@ -1265,7 +1265,7 @@ dependencies = [
 [[package]]
 name = "light-compressed-account"
 version = "0.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "borsh 0.10.4",
  "light-hasher",
@@ -1280,7 +1280,7 @@ dependencies = [
 [[package]]
 name = "light-hasher"
 version = "1.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "ark-bn254 0.5.0",
  "ark-ff 0.5.0",
@@ -1297,7 +1297,7 @@ dependencies = [
 [[package]]
 name = "light-macros"
 version = "1.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "bs58",
  "proc-macro2",
@@ -1320,8 +1320,9 @@ dependencies = [
 [[package]]
 name = "light-sdk"
 version = "0.11.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
+ "anchor-lang",
  "borsh 0.10.4",
  "light-account-checks",
  "light-compressed-account",
@@ -1337,7 +1338,7 @@ dependencies = [
 [[package]]
 name = "light-sdk-macros"
 version = "0.4.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "ark-bn254 0.5.0",
  "light-hasher",
@@ -1350,7 +1351,7 @@ dependencies = [
 [[package]]
 name = "light-verifier"
 version = "1.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "groth16-solana",
  "light-compressed-account",
@@ -1361,7 +1362,7 @@ dependencies = [
 [[package]]
 name = "light-zero-copy"
 version = "0.1.0"
-source = "git+https://github.com/Lightprotocol/light-protocol.git?rev=5b2ba400#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
+source = "git+https://github.com/Lightprotocol/light-protocol.git#5b2ba4008d9cc0c335b024fcd3ebe6d399c63279"
 dependencies = [
  "solana-program",
  "thiserror 2.0.12",

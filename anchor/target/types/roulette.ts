@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/roulette.json`.
  */
 export type Roulette = {
-  "address": "AxvxoBUcoLyYAZqEJGzNFxgsfU6QkVYW6bD3TtS7264T",
+  "address": "3ZWSJaUx6mC23yPEWbceBKNWMe1d9tC9HeEmpxXkgxhw",
   "metadata": {
     "name": "roulette",
     "version": "0.1.0",

@@ -1,9 +1,0 @@
-/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/libspl_associated_token_account_client-779876ae29bb0f67.rmeta: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/address.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/instruction.rs
-
-/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/libspl_associated_token_account_client-779876ae29bb0f67.rlib: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/address.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/instruction.rs
-
-/Users/goose/random/anchor/target/sbpf-solana-solana/release/deps/spl_associated_token_account_client-779876ae29bb0f67.d: /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/lib.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/address.rs /Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/instruction.rs
-
-/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/lib.rs:
-/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/address.rs:
-/Users/goose/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-associated-token-account-client-2.0.0/src/instruction.rs:

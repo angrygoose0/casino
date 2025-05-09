@@ -10,7 +10,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface, transfer_checked, TransferChecked, SyncNative, sync_native},
 };
 
-declare_id!("AxvxoBUcoLyYAZqEJGzNFxgsfU6QkVYW6bD3TtS7264T");
+declare_id!("3ZWSJaUx6mC23yPEWbceBKNWMe1d9tC9HeEmpxXkgxhw");
 
 #[program]
 pub mod roulette {

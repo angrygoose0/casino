@@ -10,7 +10,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface, transfer_checked, TransferChecked, SyncNative, sync_native},
 };
 
-declare_id!("EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa");
+declare_id!("B7c8rFgWeqt7JXxxyEhpTPV2NnNNy5zzyUb9TRs2TJmM");
 
 
 #[program]

@@ -1,0 +1,2 @@
+Error: Function _ZN14regex_automata4meta8strategy3new17h850933ade8e5eb0dE Stack offset of 5224 exceeded max offset of 4096 by 1128 bytes, please minimize large stack variables. Estimated function frame size: 11328 bytes. Exceeding the maximum stack offset may cause undefined behavior during execution.
+

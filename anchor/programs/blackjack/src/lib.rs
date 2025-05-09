@@ -27,11 +27,14 @@ use light_sdk::{
     cpi::{accounts::CompressionCpiAccounts, verify::verify_compressed_account_infos},
     error::LightSdkError,
     instruction::{account_meta::CompressedAccountMeta, instruction_data::LightInstructionData},
-    LightDiscriminator, LightHasher, NewAddressParamsPacked,
+    NewAddressParamsPacked,
 };
 
+use light_account_checks::discriminator::Discriminator;
+use light_sdk_macros::{LightDiscriminator, LightHasher};
 
-declare_id!("8v5jUevcVDJWLN7sUM7NBucBt9T9x3qHwAB79mZcoN3U");
+
+declare_id!("3n5vZatE8n5v6xzvAVNg8L2iY6yB7FYGLzPWajQfhD4X");
 
 
 #[ephemeral]
@@ -63,6 +66,65 @@ pub mod blackjack {
 
         Ok(())
     }
+
+    pub fn create_light_deck<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateLightDeck<'info>>,
+        light_ix_data: LightInstructionData,
+        output_merkle_tree_index: u8,
+    ) -> Result<()> {
+        let program_id = crate::ID.into();
+
+        let light_cpi_accounts = CompressionCpiAccounts::new(
+            ctx.accounts.signer.as_ref(),
+            ctx.remaining_accounts,
+            crate::ID,
+        ).map_err(ProgramError::from)?;
+
+        let address_merkle_context = light_ix_data
+            .new_addresses
+            .ok_or(LightSdkError::ExpectedAddressMerkleContext)
+            .map_err(ProgramError::from)?[0];
+
+        let (address, address_seed) = derive_address(
+            &[b"DECK", ctx.accounts.blackjack.key().as_ref()],
+            &light_cpi_accounts.tree_accounts()
+                [address_merkle_context.address_merkle_tree_pubkey_index as usize]
+                .key(),
+            &crate::ID,
+        );
+
+        let new_address_params = NewAddressParamsPacked {
+            seed: address_seed,
+            address_queue_account_index: address_merkle_context.address_queue_pubkey_index,
+            address_merkle_tree_root_index: address_merkle_context.root_index,
+            address_merkle_tree_account_index: address_merkle_context
+                .address_merkle_tree_pubkey_index,
+        };
+
+        let mut deck = LightAccount::<'_, Deck2>::new_init(
+            &program_id,
+            Some(address),
+            output_merkle_tree_index,
+        );
+
+        //deck.cards = [0; 52];
+        deck.blackjack = ctx.accounts.blackjack.key();
+        deck.drawn = 0;
+
+        verify_compressed_account_infos(
+            &light_cpi_accounts,
+            light_ix_data.proof,
+            &[deck.to_account_info().unwrap()],
+            Some(vec![new_address_params]),
+            None,
+            false,
+            None,
+        )
+        .map_err(ProgramError::from)?;
+
+
+        Ok(())
+    }   
 
 
 
@@ -1060,7 +1122,6 @@ pub struct AnteBlackJack<'info> {
     )]
     pub deck: Account<'info, Deck>,
 
-
     #[account(
         init,
         payer = signer,
@@ -1069,7 +1130,6 @@ pub struct AnteBlackJack<'info> {
         bump
     )]
     pub blackjack_hand: Account<'info, BlackJackHand>,
-
 
     #[account(
         mut,
@@ -1116,14 +1176,12 @@ pub struct InsuranceBlackJack<'info> {
     )]
     pub deck: Account<'info, Deck>,
 
-
     #[account(
         mut,
         seeds = [b"BLACKJACKHAND", blackjack.key().as_ref(), &[hand_id]],
         bump
     )]
     pub blackjack_hand: Account<'info, BlackJackHand>,
-
 
     #[account(
         mut,
@@ -1146,7 +1204,6 @@ pub struct InsuranceBlackJack<'info> {
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-
 }
 
 
@@ -1364,6 +1421,24 @@ pub struct CommitBlackJack<'info> {
 }
 
 
+#[derive(Accounts)]
+pub struct CreateLightDeck<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    
+    #[account(
+        mut,
+        seeds = [b"BLACKJACK", signer.key().as_ref()],
+        bump
+    )]
+    pub blackjack: Account<'info, BlackJack>,
+    
+
+    pub system_program: Program<'info, System>,
+}
+
+
 #[account]
 #[derive(InitSpace)]
 pub struct BlackJackHand {
@@ -1423,4 +1498,14 @@ pub struct Deck {
     pub cards: [u8; 52],      // The shuffled cards (1..=52)
     pub drawn: u8,            // Number of cards already drawn (0 initially)
     pub bump: u8,             // For PDA
+}
+
+#[derive(
+    Clone, Debug, Default, AnchorDeserialize, AnchorSerialize, LightHasher, LightDiscriminator,
+)]
+pub struct Deck2 {
+    #[hash]
+    pub blackjack : Pubkey,
+    //pub cards: [u8; 52],      // The shuffled cards (1..=52)
+    pub drawn: u8,            // Number of cards already drawn (0 initially)
 }

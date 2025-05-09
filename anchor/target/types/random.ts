@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/random.json`.
  */
 export type Random = {
-  "address": "EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa",
+  "address": "B7c8rFgWeqt7JXxxyEhpTPV2NnNNy5zzyUb9TRs2TJmM",
   "metadata": {
     "name": "random",
     "version": "0.1.0",

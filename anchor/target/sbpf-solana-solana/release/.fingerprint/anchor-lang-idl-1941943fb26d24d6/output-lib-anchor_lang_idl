@@ -1,0 +1,2 @@
+Error: Function _ZN15anchor_lang_idl5build10IdlBuilder5build17hc57c5c68c2aaab47E Stack offset of 4784 exceeded max offset of 4096 by 688 bytes, please minimize large stack variables. Estimated function frame size: 5312 bytes. Exceeding the maximum stack offset may cause undefined behavior during execution.
+

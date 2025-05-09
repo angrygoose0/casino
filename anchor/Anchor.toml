@@ -6,8 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-blackjack = "8v5jUevcVDJWLN7sUM7NBucBt9T9x3qHwAB79mZcoN3U"
-random = "EFiw9bYPsvyHhdMS8Xxc78f8ZkFJQh6v5RwabCbEEdAa"
+blackjack = "3n5vZatE8n5v6xzvAVNg8L2iY6yB7FYGLzPWajQfhD4X"
+random = "B7c8rFgWeqt7JXxxyEhpTPV2NnNNy5zzyUb9TRs2TJmM"
 
 [registry]
 url = "https://api.apr.dev"
